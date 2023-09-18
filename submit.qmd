@@ -6,16 +6,14 @@ format:
     embed-resources: true
 ---
 
+## #1 Read in the data
+
 ```{r}
 library(ggplot2)
 library(dplyr)
 library(leaflet)
 library(R.utils)
-```
 
-## #1 Read in the data
-
-```{r}
 if (!file.exists("met_all.gz"))
   download.file(
     url = "https://raw.githubusercontent.com/USCbiostats/data-science-data/master/02_met/met_all.gz",
