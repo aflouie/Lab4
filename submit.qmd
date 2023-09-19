@@ -12,6 +12,7 @@ format:
 library(ggplot2)
 library(dplyr)
 library(leaflet)
+library(leaflet.providers)
 library(R.utils)
 
 if (!file.exists("met_all.gz"))
@@ -102,8 +103,7 @@ ggplot(met_avg, aes(x = region, y = dew.point)) +
     x = "Region",
     y = "Mean Value",
     title = "Mean Dew Point and Wind Speed by Region with Error Bars"
-  ) +
-  theme_minimal()
+  )
 ```
 Dew point is more spread across the values, with a large variance. Wind speed is more limited with a shorter range and has smaller variance in comparison.  The only ones where wind speeds are within the range of dew points are in the southeast and southwest.
 
@@ -118,7 +118,7 @@ rh.pal
 
 top_10 <- met_avg2 %>% filter(rank(-met_avg2$rh) <= 10)
 
-rh.map <- leaflet(met_avg2) %>%
+leaflet(met_avg2) %>%
  addProviderTiles('CartoDB.Positron') %>%
   addCircles(lat = ~lat, lng=~lon,
              label = ~paste0(round(rh,2), "%"), color = ~ rh.pal(rh),
@@ -138,9 +138,38 @@ rh.map <- leaflet(met_avg2) %>%
     title = "Relative Humidity (%)",
     opacity = 0.7
   )
-  
-rh.map
 
+library(leaflet)
+met_avg2 <- met[,.(rh, lat = lat, lon = lon), by=c("USAFID")]
+met_avg2 <- met_avg2[!is.na(rh)]
+
+rh.pal <- colorNumeric(c('blue','green', 'yellow', 'red'), domain = met_avg2$rh)
+rh.pal
+
+leaflet(met_avg2) %>%
+ addProviderTiles('CartoDB.Positron') %>%
+  addCircles(lat = ~lat, lng=~lon,
+             label = ~paste0(round(rh,2), "%"), color = ~ rh.pal(rh),
+             opacity = 1, fillOpacity = 1, radius = 5
+             ) %>%
+   addLegend(
+    "bottomright",
+    pal = rh.pal,
+    values = ~rh,
+    title = "Relative Humidity (%)",
+    opacity = 0.7
+  )
+
+top_10 <- met_avg2 %>% filter(rank(-met_avg2$rh) <= 10)
+leaflet(top_10) %>%
+  addProviderTiles('CartoDB.Positron') %>%
+  addMarkers(
+    data = top_10, 
+    lng = ~lon, 
+    lat = ~lat,
+    label = ~paste("Top 10: ", round(rh,2), "%"),
+    options = markerOptions(icon = makeIcon(iconUrl = NULL))
+  )
 ```
 Across the US, the relative humidity appears to be warmer on the east coast(north and south) moreso than on the west coast(north and south).  Unfortunately, I was unable to get the markers for what is in the top 10, but I would assume it would be more towards the east since there is a lot of humidity there.
 
